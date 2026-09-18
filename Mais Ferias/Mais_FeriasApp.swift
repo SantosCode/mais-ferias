@@ -10,22 +10,28 @@ import SwiftData
 
 @main
 struct Mais_FeriasApp: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
+    var sharedModelContainer: ModelContainer
+    @State private var appState: AppState
+
+    init() {
+        let schema = Schema([UserProfile.self, VacationPeriod.self])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
+        let container: ModelContainer
         do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            container = try ModelContainer(for: schema, configurations: [modelConfiguration])
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }
-    }()
+
+        sharedModelContainer = container
+        _appState = State(initialValue: AppState(modelContext: container.mainContext))
+    }
 
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(appState)
         }
         .modelContainer(sharedModelContainer)
     }
