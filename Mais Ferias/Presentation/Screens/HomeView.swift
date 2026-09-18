@@ -3,8 +3,15 @@ import SwiftUI
 struct HomeView: View {
     @Environment(AppState.self) var appState
 
-    var next: Emenda? { appState.emendas.first }
-    var others: [Emenda] { Array(appState.emendas.dropFirst()) }
+    /// A janela de emendas começa no dia 1º do mês atual, então feriados deste mês
+    /// que já passaram ficam de fora da Home — só interessam datas futuras.
+    var upcoming: [Emenda] {
+        let today = Calendar.current.startOfDay(for: Date())
+        return appState.emendas.filter { $0.date >= today }
+    }
+
+    var next: Emenda? { upcoming.first }
+    var others: [Emenda] { Array(upcoming.dropFirst()) }
 
     var greeting: String {
         switch Calendar.current.component(.hour, from: Date()) {

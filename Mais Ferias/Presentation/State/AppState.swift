@@ -107,11 +107,13 @@ final class AppState {
     var remainingVacationDays: Int { max(0, annualVacationAllowance - totalVacationDays) }
 
     /// O conjunto mais eficiente de emendas que cabe no saldo restante,
-    /// ignorando feriados já cobertos por períodos registrados.
+    /// ignorando feriados passados e os já cobertos por períodos registrados.
     var yearPlan: VacationPlanner.Plan {
         let calendar = Calendar(identifier: .gregorian)
+        let today = calendar.startOfDay(for: Date())
         let available = emendas.filter { emenda in
             let day = calendar.startOfDay(for: emenda.date)
+            guard day >= today else { return false }
             return !vacations.contains { vacation in
                 day >= calendar.startOfDay(for: vacation.start) && day <= calendar.startOfDay(for: vacation.end)
             }
