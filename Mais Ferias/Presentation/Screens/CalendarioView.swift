@@ -5,7 +5,13 @@ struct CalendarioView: View {
     let weekLabels = ["D", "S", "T", "Q", "Q", "S", "S"]
 
     private var calendar: Calendar { Calendar(identifier: .gregorian) }
-    private var year: Int { calendar.component(.year, from: Date()) }
+
+    /// O primeiro dia de cada um dos 12 meses exibidos, a partir do mês atual —
+    /// a mesma janela rolante usada para computar as emendas.
+    private var monthStarts: [Date] {
+        let (start, _) = AppState.twelveMonthWindow(from: Date(), calendar: calendar)
+        return (0..<12).compactMap { calendar.date(byAdding: .month, value: $0, to: start) }
+    }
 
     private struct MonthData {
         let title: String
@@ -20,9 +26,10 @@ struct CalendarioView: View {
     private var vacationDates: Set<Date> {
         var dates = Set<Date>()
         for e in appState.emendas {
-            let bridge = EmendaCalculator.bridge(for: e.date, calendar: calendar)
-            var d = bridge.start
-            while d <= bridge.end {
+            let bridge = EmendaCalculator.bridge(for: e.date, calendar: calendar, schedule: appState.workSchedule, maxVacationDays: appState.desiredVacationDays)
+            guard bridge.vacationDays > 0 else { continue }
+            var d = bridge.vacationStart
+            while d <= bridge.vacationEnd {
                 dates.insert(calendar.startOfDay(for: d))
                 guard let next = calendar.date(byAdding: .day, value: 1, to: d) else { break }
                 d = next
@@ -32,30 +39,33 @@ struct CalendarioView: View {
     }
 
     var body: some View {
-        ZStack {
-            AppBackground()
-            ScrollView {
-                VStack(spacing: 16) {
-                    HStack { Text("Calendário").font(.system(size: 28, weight: .bold)).foregroundStyle(.white); Spacer() }
+        NavigationStack {
+            ZStack {
+                AppBackground()
+                ScrollView {
+                    VStack(spacing: 16) {
+                        HStack { Text("Calendário").font(.system(size: 28, weight: .bold)).foregroundStyle(.white); Spacer() }
 
-                    HStack(spacing: 14) {
-                        legend(color: accentOrange, filled: true, label: "Feriado")
-                        legend(color: accentOrange, filled: false, label: "Férias sugeridas")
-                        legend(color: .white.opacity(0.2), filled: true, label: "Fim de semana")
-                    }
+                        HStack(spacing: 14) {
+                            legend(color: accentOrange, filled: true, label: "Feriado")
+                            legend(color: accentOrange, filled: false, label: "Férias sugeridas")
+                            legend(color: .white.opacity(0.2), filled: true, label: "Fim de semana")
+                        }
 
-                    ForEach(1...12, id: \.self) { month in
-                        monthCard(for: month)
+                        ForEach(monthStarts, id: \.self) { monthStart in
+                            monthCard(for: monthStart)
+                        }
                     }
+                    .padding(18)
+                    .padding(.bottom, 20)
                 }
-                .padding(18)
-                .padding(.bottom, 20)
             }
+            .toolbar(.hidden, for: .navigationBar)
         }
     }
 
-    private func monthCard(for month: Int) -> some View {
-        let data = monthData(for: month)
+    private func monthCard(for monthStart: Date) -> some View {
+        let data = monthData(for: monthStart)
         return VStack(spacing: 12) {
             Text(data.title).font(.headline).foregroundStyle(.white)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 7), spacing: 6) {
@@ -77,16 +87,18 @@ struct CalendarioView: View {
         .glassCard(cornerRadius: 26)
     }
 
-    private func monthData(for month: Int) -> MonthData {
-        guard let firstOfMonth = calendar.date(from: DateComponents(year: year, month: month, day: 1)),
-              let range = calendar.range(of: .day, in: .month, for: firstOfMonth) else {
+    private func monthData(for firstOfMonth: Date) -> MonthData {
+        guard let range = calendar.range(of: .day, in: .month, for: firstOfMonth) else {
             return MonthData(title: "", rows: [], emendas: [])
         }
+
+        let year = calendar.component(.year, from: firstOfMonth)
+        let month = calendar.component(.month, from: firstOfMonth)
 
         let holidays = holidayDates
         let vacations = vacationDates
 
-        let firstWeekday = calendar.component(.weekday, from: firstOfMonth) // 1 = Sunday
+        let firstWeekday = calendar.component(.weekday, from: firstOfMonth) // 1 = domingo
         var cells: [(label: String, kind: String)] = Array(repeating: ("", "empty"), count: firstWeekday - 1)
 
         for day in 1...range.count {
@@ -96,7 +108,7 @@ struct CalendarioView: View {
             let kind: String
             if holidays.contains(startOfDay) {
                 kind = "holiday"
-            } else if weekday == 1 || weekday == 7 {
+            } else if appState.workSchedule.freeWeekdays.contains(weekday) {
                 kind = "weekend"
             } else if vacations.contains(startOfDay) {
                 kind = "vacation"
@@ -120,13 +132,27 @@ struct CalendarioView: View {
         let title = "\(monthFormatter.string(from: firstOfMonth).capitalized) \(year)"
 
         let monthEmendas = appState.emendas.filter {
-            calendar.component(.month, from: $0.date) == month && calendar.component(.year, from: $0.date) == year
+            calendar.isDate($0.date, equalTo: firstOfMonth, toGranularity: .month)
         }
 
         return MonthData(title: title, rows: rows, emendas: monthEmendas)
     }
 
+    @ViewBuilder
     private func emendaHighlight(_ e: Emenda) -> some View {
+        if let suggestion = appState.suggestedVacationPeriod(for: e) {
+            NavigationLink {
+                RegistrarFeriasView(prefillStart: suggestion.start, prefillEnd: suggestion.end)
+            } label: {
+                emendaHighlightLabel(e)
+            }
+            .buttonStyle(.plain)
+        } else {
+            emendaHighlightLabel(e)
+        }
+    }
+
+    private func emendaHighlightLabel(_ e: Emenda) -> some View {
         HStack(spacing: 14) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(e.range): emende \(e.name)").font(.subheadline.weight(.bold)).foregroundStyle(.white)

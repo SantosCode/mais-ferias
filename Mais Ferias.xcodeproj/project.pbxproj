@@ -27,6 +27,7 @@
 		163996B8305987AB00DFB21C /* Mais Ferias.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Mais Ferias.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		163996C7305987AE00DFB21C /* Mais FeriasTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Mais FeriasTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		163996D1305987AE00DFB21C /* Mais FeriasUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Mais FeriasUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		166DC4BC305DF0F80008838F /* Mais-Ferias-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Mais-Ferias-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -69,6 +70,7 @@
 		163996AF305987AB00DFB21C = {
 			isa = PBXGroup;
 			children = (
+				166DC4BC305DF0F80008838F /* Mais-Ferias-Info.plist */,
 				163996BA305987AB00DFB21C /* Mais Ferias */,
 				163996CA305987AE00DFB21C /* Mais FeriasTests */,
 				163996D4305987AE00DFB21C /* Mais FeriasUITests */,
@@ -372,6 +374,9 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Mais-Ferias-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Mais Férias";
+				INFOPLIST_KEY_NSCalendarsWriteOnlyAccessUsageDescription = "Usado para adicionar as férias sugeridas como eventos no seu calendário.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -416,6 +421,9 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Mais-Ferias-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Mais Férias";
+				INFOPLIST_KEY_NSCalendarsWriteOnlyAccessUsageDescription = "Usado para adicionar as férias sugeridas como eventos no seu calendário.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
