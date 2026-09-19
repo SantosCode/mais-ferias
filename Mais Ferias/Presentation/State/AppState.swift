@@ -159,6 +159,14 @@ final class AppState {
 
     var totalVacationDays: Int { vacations.reduce(0) { $0 + $1.days } }
 
+    /// O próximo período de férias registrado ainda não concluído — em andamento
+    /// ou futuro (a lista já vem ordenada por início).
+    var nextScheduledVacation: VacationPeriod? {
+        let calendar = Calendar(identifier: .gregorian)
+        let today = calendar.startOfDay(for: Date())
+        return vacations.first { calendar.startOfDay(for: $0.end) >= today }
+    }
+
     /// Dias de férias dos períodos registrados que caem no ano-calendário atual —
     /// períodos que cruzam a virada do ano contam só os dias de dentro.
     var vacationDaysUsedThisYear: Int {

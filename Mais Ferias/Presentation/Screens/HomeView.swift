@@ -53,6 +53,7 @@ struct HomeView: View {
                     if next != nil {
                         heroCard
                     }
+                    scheduledVacationCard
                     statsRow
                     yearPlanCard
 
@@ -116,6 +117,44 @@ struct HomeView: View {
             statCard(value: "\(appState.vacationDaysUsedThisYear)", label: "dias usados em \(String(currentYear))", color: accentOrange)
             statCard(value: "\(appState.remainingVacationDays)", label: "dias de saldo", color: .white)
             statCard(value: "\(appState.emendas.count)", label: "emendas", color: .white)
+        }
+    }
+
+    /// Férias registradas em andamento ou por vir — some quando não há nenhuma.
+    @ViewBuilder
+    var scheduledVacationCard: some View {
+        if let vacation = appState.nextScheduledVacation {
+            let calendar = Calendar.current
+            let today = calendar.startOfDay(for: Date())
+            let inProgress = calendar.startOfDay(for: vacation.start) <= today
+            let daysUntil = calendar.dateComponents([.day], from: today, to: calendar.startOfDay(for: vacation.start)).day ?? 0
+            let gained = appState.daysGained(for: vacation)
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text("FÉRIAS AGENDADAS").font(.caption.weight(.bold)).foregroundStyle(.white.opacity(0.75))
+                    Spacer()
+                    Text(inProgress ? "EM ANDAMENTO" : (daysUntil == 1 ? "AMANHÃ" : "EM \(daysUntil) DIAS"))
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(Color(red: 0.1, green: 0.06, blue: 0.03))
+                        .padding(.horizontal, 10).padding(.vertical, 5)
+                        .background(accentOrange.opacity(0.9), in: Capsule())
+                }
+                HStack(spacing: 12) {
+                    Image(systemName: inProgress ? "beach.umbrella.fill" : "airplane.departure")
+                        .font(.title3)
+                        .foregroundStyle(accentOrange)
+                        .frame(width: 44, height: 44)
+                        .background(.white.opacity(0.14), in: RoundedRectangle(cornerRadius: 14))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(vacation.rangeLabel).font(.subheadline.weight(.bold)).foregroundStyle(.white)
+                        Text("\(vacation.days) dias corridos" + (gained > 0 ? " · +\(gained) de bônus com folgas ao redor" : ""))
+                            .font(.caption).foregroundStyle(.white.opacity(0.75))
+                    }
+                    Spacer()
+                }
+            }
+            .padding(16)
+            .glassCard(cornerRadius: 22)
         }
     }
 
